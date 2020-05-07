@@ -1,0 +1,41 @@
+
+PlayerCharacter.png
+size: 64,16
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+StandingStill
+  rotate: false
+  xy: 1, 1
+  size: 7, 14
+  orig: 7, 14
+  offset: 0, 0
+  index: -1
+Walking1
+  rotate: false
+  xy: 9, 1
+  size: 7, 14
+  orig: 7, 14
+  offset: 0, 0
+  index: -1
+Walking2
+  rotate: false
+  xy: 17, 1
+  size: 7, 14
+  orig: 7, 14
+  offset: 0, 0
+  index: -1
+Walking3
+  rotate: false
+  xy: 25, 1
+  size: 7, 14
+  orig: 7, 14
+  offset: 0, 0
+  index: -1
+Walking4
+  rotate: false
+  xy: 33, 1
+  size: 7, 14
+  orig: 7, 14
+  offset: 0, 0
+  index: -1
