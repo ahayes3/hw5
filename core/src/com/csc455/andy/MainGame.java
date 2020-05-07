@@ -11,17 +11,16 @@ import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
+import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
 
 public class MainGame implements Screen {
 	final Homework5 game;
 	SpriteBatch batch;
-	TextureAtlas atlas;
 	OrthographicCamera camera;
-	TiledMap map;
-	AssetManager manager;
-	OrthogonalTiledMapRenderer mapRenderer;
-	float stateTime;
+	MyMap map;
 	Player player;
 	
 	public MainGame(final Homework5 game) {
@@ -30,14 +29,8 @@ public class MainGame implements Screen {
 		batch = game.batch;
 		camera.setToOrtho(false,384,216);
 		player = new Player(new TextureAtlas(Gdx.files.internal("PlayerCharacter.atlas")));
+		map = new MyMap("tstMap.tmx",camera,.5f);
 		
-		manager = new AssetManager();
-		manager.setLoader(TiledMap.class,new TmxMapLoader());
-		manager.load("tstMap.tmx",TiledMap.class);
-		manager.finishLoading();
-		map = manager.get("tstMap.tmx",TiledMap.class);
-		mapRenderer = new OrthogonalTiledMapRenderer(map,.5f);
-		mapRenderer.setView(camera);
 	}
 	@Override
 	public void show() {
@@ -46,8 +39,7 @@ public class MainGame implements Screen {
 	
 	@Override
 	public void render(float delta) {
-		player.move(camera);
-		
+		player.move(camera,map);
 		
 		draw(delta);
 	}
@@ -56,9 +48,7 @@ public class MainGame implements Screen {
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		batch.setProjectionMatrix(camera.combined);
 		
-		mapRenderer.setView(camera);
-		mapRenderer.render();
-		
+		map.draw(camera);
 		batch.begin();
 		player.draw(batch);
 		batch.end();
@@ -86,8 +76,7 @@ public class MainGame implements Screen {
 	
 	@Override
 	public void dispose() {
-		atlas.dispose();
-		manager.dispose();
+		player.dispose();
 		map.dispose();
 	}
 }
