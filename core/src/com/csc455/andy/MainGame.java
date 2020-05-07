@@ -8,6 +8,7 @@ import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.*;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
@@ -22,6 +23,7 @@ public class MainGame implements Screen {
 	OrthographicCamera camera;
 	MyMap map;
 	Player player;
+	ShapeRenderer sr;
 	
 	public MainGame(final Homework5 game) {
 		this.game = game;
@@ -30,7 +32,7 @@ public class MainGame implements Screen {
 		camera.setToOrtho(false,384,216);
 		player = new Player(new TextureAtlas(Gdx.files.internal("PlayerCharacter.atlas")));
 		map = new MyMap("tstMap.tmx",camera,.5f);
-		
+		sr = new ShapeRenderer();
 	}
 	@Override
 	public void show() {
@@ -44,14 +46,20 @@ public class MainGame implements Screen {
 		draw(delta);
 	}
 	public void draw(float delta) {
-		Gdx.gl.glClearColor(1,1,1,1);
+		Gdx.gl.glClearColor(0,0,1,1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		batch.setProjectionMatrix(camera.combined);
+		sr.setProjectionMatrix(camera.combined);
 		
 		map.draw(camera);
 		batch.begin();
 		player.draw(batch);
 		batch.end();
+		sr.setAutoShapeType(true);
+		sr.begin();
+		player.debugDraw(sr);
+		map.debugDraw(sr);
+		sr.end();
 		camera.update();
 	}
 	@Override
