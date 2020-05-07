@@ -4,6 +4,13 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.*;
+import com.badlogic.gdx.maps.MapLayer;
+import com.badlogic.gdx.maps.MapObjects;
+import com.badlogic.gdx.maps.objects.RectangleMapObject;
+import com.badlogic.gdx.maps.tiled.TiledMap;
+import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
+import com.badlogic.gdx.math.Intersector;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
@@ -23,7 +30,7 @@ public class Player implements Disposable {
 	float stateTime;
 	public Player(TextureAtlas atlas) {
 		aim = new Vector2(1,0);
-		position = new Vector2(5000,500);
+		position = new Vector2(250,300);
 		velocity = Vector2.Zero;
 		Array<TextureRegion> walkingRegions = new Array<>();
 		for(TextureAtlas.AtlasRegion a : atlas.getRegions()) {
@@ -36,8 +43,8 @@ public class Player implements Disposable {
 		this.atlas = atlas;
 		unprojector = new Vector3();
 	}
-	public void move(OrthographicCamera camera) {
-		final float velMod = 25;
+	public void move(OrthographicCamera camera, TiledMap map) {
+		final float velMod = 10;
 		boolean sprinting = Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT);
 		if(sprinting && Gdx.input.isKeyPressed(Input.Keys.D)) {
 			velocity.x += sprintMul * velMod;
@@ -61,10 +68,10 @@ public class Player implements Disposable {
 		else if (!Gdx.input.isKeyPressed(Input.Keys.A) && !Gdx.input.isKeyPressed(Input.Keys.D) && velocity.x <0)
 			velocity.x += velMod;
 		
-		if(velocity.x > 5000)
-			velocity.x = 5000;
-		else if(velocity.x < -5000)
-			velocity.x = -5000;
+		if(velocity.x > 500)
+			velocity.x = 500;
+		else if(velocity.x < -500)
+			velocity.x = -500;
 		
 		Vector3 unprojected = camera.unproject(unprojector.set(Gdx.input.getX(),Gdx.input.getY(),0));
 		aim.set(unprojected.x - position.x,unprojected.y - position.y);
@@ -75,7 +82,16 @@ public class Player implements Disposable {
 			movement = Movement.WALKING;
 		
 		
-		position.add(velocity.scl(Gdx.graphics.getDeltaTime()));
+		velocity.y -= 9.81;
+		
+		TiledMapTileLayer collisionLayer = (TiledMapTileLayer) map.getLayers().get("collision");
+		MapObjects objects = collisionLayer.getObjects();
+		
+		for(RectangleMapObject rectangle:objects.getByType(RectangleMapObject.class)) {
+			//todo if(Intersector.overlaps
+		}
+		
+		position.add(velocity.x *Gdx.graphics.getDeltaTime(),velocity.y * Gdx.graphics.getDeltaTime());
 		camera.position.set(position.x,position.y,0);
 	}
 	public void draw(SpriteBatch batch) {//batch must already have begun and must be ended after

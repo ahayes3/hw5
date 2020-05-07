@@ -28,14 +28,16 @@ public class MainGame implements Screen {
 		this.game = game;
 		camera = new OrthographicCamera();
 		batch = game.batch;
-		camera.setToOrtho(false,384*5,216*5);
+		camera.setToOrtho(false,384,216);
 		player = new Player(new TextureAtlas(Gdx.files.internal("PlayerCharacter.atlas")));
+		
 		manager = new AssetManager();
 		manager.setLoader(TiledMap.class,new TmxMapLoader());
 		manager.load("tstMap.tmx",TiledMap.class);
 		manager.finishLoading();
 		map = manager.get("tstMap.tmx",TiledMap.class);
-		mapRenderer = new OrthogonalTiledMapRenderer(map);
+		mapRenderer = new OrthogonalTiledMapRenderer(map,.5f);
+		mapRenderer.setView(camera);
 	}
 	@Override
 	public void show() {
@@ -54,6 +56,7 @@ public class MainGame implements Screen {
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		batch.setProjectionMatrix(camera.combined);
 		
+		mapRenderer.setView(camera);
 		mapRenderer.render();
 		
 		batch.begin();
