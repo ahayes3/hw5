@@ -33,6 +33,7 @@ public class MainGame implements Screen {
 	short state;
 	boolean present;
 	public static char fs = File.separatorChar;
+	TextureAtlas pistolAtlas;
 	public MainGame(final Homework5 game) {
 		state = PRESENT;
 		guns = new Array<>();
@@ -46,7 +47,8 @@ public class MainGame implements Screen {
 		map = new MyMap("maps/tstMap/past/pastTest.tmx","maps/tstMap/present/presentTest.tmx",camera,.5f,world,true);
 		screenState = ScreenState.HIDDEN;
 		debugRenderer = new Box2DDebugRenderer();
-		Gun pistol = new Pistol(10,"sprites"+MainGame.fs+"guns"+MainGame.fs+"pistol"+MainGame.fs+"Pistol.atlas");
+		pistolAtlas = new TextureAtlas("sprites"+MainGame.fs+"guns"+MainGame.fs+"pistol"+MainGame.fs+"Pistol.atlas");
+		Gun pistol = new Pistol(10,pistolAtlas);
 		guns.add(pistol);
 		player.pickup(pistol);
 		player.selection = player.inventory.get(0);
@@ -68,6 +70,7 @@ public class MainGame implements Screen {
 		
 		if(Gdx.input.isKeyJustPressed(Input.Keys.Q))
 			present = !present;
+		
 		player.update(camera,present,map,dt);
 		guns.forEach(p -> p.update(dt));
 		world.step(dt,6,2);
@@ -110,5 +113,6 @@ public class MainGame implements Screen {
 	public void dispose() {
 		player.dispose();
 		map.dispose();
+		pistolAtlas.dispose();
 	}
 }

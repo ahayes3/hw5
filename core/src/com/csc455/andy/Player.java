@@ -29,6 +29,7 @@ public class Player implements Disposable {
 	int height, width, health;
 	Body body;
 	Array<Gun> inventory;
+	boolean jumped;
 	Gun selection;
 	
 	public Player(TextureAtlas atlas, World world) {
@@ -72,6 +73,7 @@ public class Player implements Disposable {
 		body.setFixedRotation(true);
 		height = 14;
 		health = 100;
+		jumped = false;
 		width = 7;
 	}
 	
@@ -93,16 +95,20 @@ public class Player implements Disposable {
 		if (!dead()) {
 			move(camera, delta);
 			Filter f = new Filter();
-			if (present) {
+			
+			if (present && body.getFixtureList().get(0).getFilterData().categoryBits == MainGame.PAST) {
 				f.categoryBits = MainGame.PRESENT;
 				f.maskBits = MainGame.PRESENT;
+				body.getFixtureList().get(0).setFilterData(f);
+				map.swapDraw();
 			}
-			else {
+			else if(!present && body.getFixtureList().get(0).getFilterData().categoryBits == MainGame.PRESENT) {
 				f.categoryBits = MainGame.PAST;
 				f.maskBits = MainGame.PAST;
+				body.getFixtureList().get(0).setFilterData(f);
+				map.swapDraw();
 			}
-			body.getFixtureList().get(0).setFilterData(f);
-			map.swapDraw();
+			
 		}
 		else {
 			movement = Movement.STANDING;
@@ -110,7 +116,14 @@ public class Player implements Disposable {
 		}
 		
 	}
-	
+	public PlayerState saveState() {
+		return new PlayerState(body.getPosition(),body.getLinearVelocity(),inventory,health);
+	}
+	public void setState(PlayerState state) {
+		body.setTransform(state.position,body.getAngle());
+		body.setLinearVelocity(state.velocity);
+		health = state.health;
+	}
 	public void move(OrthographicCamera camera, float delta) {
 		right.set(1, 0);
 		left.set(-1, 0);

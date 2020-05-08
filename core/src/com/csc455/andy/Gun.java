@@ -23,6 +23,7 @@ public abstract class Gun {
 		this.damage = damage;
 		this.firemode =firemode;
 		this.delay = delay;
+		this.slot = slot;
 		stateTime = 0;
 		timer = .3f;
 		
@@ -55,4 +56,5 @@ public abstract class Gun {
 	public void draw(SpriteBatch batch,Vector2 pos,float originX,float originY,float angle) {
 		draw(batch,pos.x,pos.y,originX,originY,angle);
 	}
+	public abstract Gun clone();
 }
