@@ -14,33 +14,51 @@ import com.badlogic.gdx.utils.Disposable;
 
 
 public class MyMap implements Disposable {
-	TiledMap map;
-	MapRenderer renderer;
+	TiledMap past,present;
+	MapRenderer presentRenderer,pastRenderer,draw;
 	AssetManager manager;
 	Array<Body> tileBodies;
-	TiledMapTileLayer collisionLayer;
+	TiledMapTileLayer presentLayer,pastLayer;
 	float tileWidth,tileHeight;
-	public MyMap(String fileName, OrthographicCamera camera, float scale,World world) {
+	public MyMap(String pastPath,String presentPath, OrthographicCamera camera, float scale,World world,boolean startPresent) {
 		manager = new AssetManager();
-		manager.setLoader(TiledMap.class,new TmxMapLoader());
-		manager.load(fileName,TiledMap.class);
+		TmxMapLoader loader = new TmxMapLoader();
+		manager.setLoader(TiledMap.class,loader);
+		manager.load(presentPath,TiledMap.class);
 		manager.finishLoading();
-		map = manager.get(fileName,TiledMap.class);
-		renderer = new OrthogonalTiledMapRenderer(map,scale);
-		renderer.setView(camera);
-		collisionLayer = (TiledMapTileLayer) map.getLayers().get("collision");
-		tileBodies = new Array<>();
+		present = manager.get(presentPath,TiledMap.class);
 		
+		presentRenderer = new OrthogonalTiledMapRenderer(present,scale);
+		presentRenderer.setView(camera);
+		
+		manager.load(pastPath,TiledMap.class);
+		manager.finishLoading();
+		past = manager.get(pastPath,TiledMap.class);
+		
+		pastRenderer = new OrthogonalTiledMapRenderer(past,scale);
+		pastRenderer.setView(camera);
+		
+		if(startPresent)
+			draw = presentRenderer;
+		else
+			draw = pastRenderer;
+		
+		
+		tileBodies = new Array<>();
 		BodyDef bodyDef = new BodyDef();
 		bodyDef.type = BodyDef.BodyType.StaticBody;
 		PolygonShape shape = new PolygonShape();
-		tileWidth = collisionLayer.getTileWidth()*scale;
-		tileHeight = collisionLayer.getTileHeight()*scale;
+		
+		tileWidth =((TiledMapTileLayer) present.getLayers().get(0)).getTileWidth()*scale;
+		tileHeight = ((TiledMapTileLayer) present.getLayers().get(0)).getTileHeight()*scale;
+		
 		
 		shape.setAsBox((tileWidth/2)/Coords.ratio,(tileHeight/2)/Coords.ratio);
 		FixtureDef fixtureDef = new FixtureDef();
 		ChainShape cs = new ChainShape();
 		Vector2[] vertices =new Vector2[4];
+		
+		
 		for(int i=0;i<shape.getVertexCount();i++) {
 			Vector2 v = new Vector2();
 			shape.getVertex(i,v);
@@ -49,9 +67,16 @@ public class MyMap implements Disposable {
 		cs.createChain(vertices);
 		fixtureDef.shape = cs;
 		fixtureDef.density = 1;
-		for(int i=collisionLayer.getWidth();i>=0;i--) {
-			for(int j=collisionLayer.getHeight();j>=0;j--) {
-				TiledMapTileLayer.Cell c = collisionLayer.getCell(i,j);
+		
+		fixtureDef.filter.maskBits =MainGame.PAST;
+		fixtureDef.filter.categoryBits=MainGame.PAST;
+		
+		pastLayer = (TiledMapTileLayer) past.getLayers().get("collision");
+		presentLayer = (TiledMapTileLayer) present.getLayers().get("collision");
+
+		for(int i = pastLayer.getWidth(); i>=0; i--) {
+			for(int j = pastLayer.getHeight(); j>=0; j--) {
+				TiledMapTileLayer.Cell c = pastLayer.getCell(i,j);
 				if(c!=null && c.getTile().getProperties().containsKey("block")) {
 					bodyDef.position.set(Coords.gameToBox(i *tileWidth + tileWidth/2,j*tileHeight + tileHeight /2));
 					Body b = world.createBody(bodyDef);
@@ -61,14 +86,37 @@ public class MyMap implements Disposable {
 				}
 			}
 		}
+
+		fixtureDef.filter.categoryBits = MainGame.PRESENT;
+		fixtureDef.filter.maskBits = MainGame.PRESENT;
+		for(int i = presentLayer.getWidth(); i>=0; i--) {
+			for(int j = presentLayer.getHeight(); j>=0; j--) {
+				TiledMapTileLayer.Cell c = presentLayer.getCell(i,j);
+				if(c!=null && c.getTile().getProperties().containsKey("block")) {
+					bodyDef.position.set(Coords.gameToBox(i *tileWidth + tileWidth/2,j*tileHeight + tileHeight /2));
+					Body b = world.createBody(bodyDef);
+					b.setUserData(this);
+					Fixture f = b.createFixture(fixtureDef);
+					tileBodies.add(b);
+				}
+			}
+		}
+		
+	}
+	public void swapDraw() {
+		if(draw.equals(presentRenderer))
+			draw = pastRenderer;
+		else if(draw.equals(pastRenderer))
+			draw = presentRenderer;
 	}
 	public void draw(OrthographicCamera camera) {
-		renderer.setView(camera);
-		renderer.render();
+		draw.setView(camera);
+		draw.render();
 	}
 	@Override
 	public void dispose() {
 		manager.dispose();
-		map.dispose();
+		past.dispose();
+		present.dispose();
 	}
 }
