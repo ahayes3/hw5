@@ -23,7 +23,7 @@ enum Movement {
 public class Player implements Disposable {
 	TextureAtlas atlas;
 	Animation<TextureRegion> walkAnimation;
-	TextureRegion standing,current,arm;
+	TextureRegion standing,current;
 	Vector2 aim, position, velocity;
 	Movement movement;
 	Vector3 unprojector;
@@ -35,7 +35,8 @@ public class Player implements Disposable {
 	Gun selection;
 	
 	public Player(TextureAtlas atlas, World world) {
-		inventory = new Array<>(5);
+		inventory = new Array<>();
+		inventory.setSize(5);
 		aim = new Vector2(1, 0);
 		position = new Vector2(8, 9);
 		velocity = Vector2.Zero;
@@ -51,7 +52,6 @@ public class Player implements Disposable {
 		unprojector = new Vector3();
 		current = standing;
 		sprintMul = 1.428f;
-		arm = new TextureRegion(new Texture(Gdx.files.internal("sprites"+ MainGame.fs+"pc"+MainGame.fs+"Arm.png")));
 		
 		BodyDef bodyDef = new BodyDef();
 		bodyDef.type = BodyDef.BodyType.DynamicBody;
@@ -92,6 +92,9 @@ public class Player implements Disposable {
 			move(camera,delta);
 		else {
 			movement = Movement.STANDING;
+			if(Gdx.input.isKeyJustPressed(Input.Keys.Q)) {
+				//todo shift world
+			}
 		}
 		
 	}
@@ -167,10 +170,7 @@ public class Player implements Disposable {
 		}
 		
 		batch.draw(current, position.x, position.y, 4f, 7f, current.getRegionWidth(), current.getRegionHeight(), 1, 1, 0);
-		batch.draw(arm,position.x+width/2f,position.y +height/2f,arm.getRegionWidth(),arm.getRegionHeight()/2f,arm.getRegionWidth(),arm.getRegionHeight(),1,1,aim.angle());
-		Vector2 handPos = new Vector2(position.x +width/2f,position.y+height/2f);
-		handPos.add(aim.setLength(arm.getRegionWidth()));
-		selection.draw(batch,handPos,handPos.sub(aim),aim.angle());
+		selection.draw(batch,position.x+width/2f,position.y+height/2f,0,selection.armHeight(),aim.angle());
 	}
 	public boolean dead() {
 		return health <= 0;

@@ -48,6 +48,7 @@ public class MainGame implements Screen {
 		Gun pistol = new Pistol(10,"sprites"+MainGame.fs+"guns"+MainGame.fs+"pistol"+MainGame.fs+"Pistol.atlas");
 		guns.add(pistol);
 		player.pickup(pistol);
+		player.selection = player.inventory.get(0);
 	}
 	@Override
 	public void show() {

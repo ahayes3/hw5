@@ -28,7 +28,7 @@ public abstract class Gun {
 		
 		Array<TextureRegion> animationRegions = new Array<>();
 		this.atlas = atlas;
-		idle = atlas.findRegion("Handgun");
+		idle = atlas.findRegion("Idle");
 		for(TextureAtlas.AtlasRegion a: atlas.getRegions()) {
 			if(a.name.contains("Firing"))
 				animationRegions.add(a);
@@ -49,13 +49,9 @@ public abstract class Gun {
 	public abstract void shoot();
 	public abstract void draw(SpriteBatch batch, float x, float y, float originX, float originY, float angle);
 	public void draw(SpriteBatch batch, Vector2 pos, Vector2 origin, float angle) {
-		if ((angle <= 90 || angle > 270) && current.isFlipX())
-			current.flip(true, false);
-		else if (angle >= 90 && angle < 270 && !current.isFlipX())
-			current.flip(true, false);
-		
 		draw(batch,pos.x,pos.y,origin.x,origin.y,angle);
 	}
+	public abstract float armHeight();
 	public void draw(SpriteBatch batch,Vector2 pos,float originX,float originY,float angle) {
 		draw(batch,pos.x,pos.y,originX,originY,angle);
 	}

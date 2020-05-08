@@ -1,48 +1,48 @@
 
 Pistol.png
-size: 128,32
+size: 256,32
 format: RGBA8888
 filter: Nearest,Nearest
 repeat: none
 Firing3
   rotate: false
   xy: 1, 1
-  size: 29, 17
-  orig: 29, 17
+  size: 42, 17
+  orig: 42, 17
   offset: 0, 0
   index: -1
 Firing4
   rotate: false
-  xy: 31, 1
-  size: 29, 17
-  orig: 29, 17
+  xy: 44, 1
+  size: 42, 17
+  orig: 42, 17
   offset: 0, 0
   index: -1
 Firing2
   rotate: false
-  xy: 31, 1
-  size: 29, 17
-  orig: 29, 17
+  xy: 44, 1
+  size: 42, 17
+  orig: 42, 17
   offset: 0, 0
   index: -1
 Firing5
   rotate: false
-  xy: 61, 1
-  size: 29, 17
-  orig: 29, 17
+  xy: 87, 1
+  size: 42, 17
+  orig: 42, 17
   offset: 0, 0
   index: -1
 Firing1
   rotate: false
-  xy: 61, 1
-  size: 29, 17
-  orig: 29, 17
+  xy: 87, 1
+  size: 42, 17
+  orig: 42, 17
   offset: 0, 0
   index: -1
-Handgun
+Idle
   rotate: false
-  xy: 91, 1
-  size: 29, 17
-  orig: 29, 17
+  xy: 130, 1
+  size: 42, 17
+  orig: 42, 17
   offset: 0, 0
   index: -1

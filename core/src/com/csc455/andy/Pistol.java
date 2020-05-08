@@ -29,12 +29,23 @@ public class Pistol extends Gun implements Disposable {
 	}
 	//Position of hand passed in
 	public void draw(SpriteBatch batch,float x,float y,float originX,float originY,float angle) {
-		batch.draw(current,x,y,originX,originY,current.getRegionWidth(),current.getRegionHeight(),.2f,.2f,angle);
+		if ((angle <= 90 || angle > 270) && current.isFlipY())
+			current.flip(false, true);
+		else if (angle >= 90 && angle < 270 && !current.isFlipY()) {
+			current.flip(false, true);
+		}
+		batch.draw(current,x,y,originX,originY,current.getRegionWidth()/5f,current.getRegionHeight()/5f,1,1,angle);
 	}
 	public Vector2 getEnd() {
 		//TODO
 		return null;
 	}
+	
+	@Override
+	public float armHeight() {
+		return 7/5f;
+	}
+	
 	@Override
 	public void dispose() {
 		atlas.dispose();
