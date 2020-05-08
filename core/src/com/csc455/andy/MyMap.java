@@ -9,69 +9,60 @@ import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
-import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
+
 
 public class MyMap implements Disposable {
 	TiledMap map;
 	MapRenderer renderer;
 	AssetManager manager;
-	Rectangle[][] collisionTiles;
-	Vector2 tl,tr,bl,br;
+	Array<Body> tileBodies;
 	TiledMapTileLayer collisionLayer;
-	public MyMap(String fileName, OrthographicCamera camera, float scale) {
+	float tileWidth,tileHeight;
+	public MyMap(String fileName, OrthographicCamera camera, float scale,World world) {
 		manager = new AssetManager();
 		manager.setLoader(TiledMap.class,new TmxMapLoader());
-		manager.load("tstMap.tmx",TiledMap.class);
+		manager.load(fileName,TiledMap.class);
 		manager.finishLoading();
 		map = manager.get(fileName,TiledMap.class);
 		renderer = new OrthogonalTiledMapRenderer(map,scale);
 		renderer.setView(camera);
-		MapLayer collisionObjects = new MapLayer();
-		map.getLayers().add(collisionObjects);
 		collisionLayer = (TiledMapTileLayer) map.getLayers().get("collision");
-		collisionTiles = new Rectangle[collisionLayer.getWidth()][collisionLayer.getHeight()];
+		tileBodies = new Array<>();
 		
-		for(int i=0;i<collisionLayer.getWidth();i++) {
-			for(int j=0;j<collisionLayer.getHeight();j++) {
-				TiledMapTileLayer.Cell cell = collisionLayer.getCell(i,j);
-				if(cell==null)
-					collisionTiles[i][j]=null;
-				else if(cell.getTile().getProperties().containsKey("block") && ((Boolean) cell.getTile().getProperties().get("block"))) {
-					collisionTiles[i][j] = new Rectangle(i*collisionLayer.getTileWidth()*scale,j*collisionLayer.getTileHeight()*scale,collisionLayer.getTileWidth()*scale,collisionLayer.getTileHeight()*scale);
+		BodyDef bodyDef = new BodyDef();
+		bodyDef.type = BodyDef.BodyType.StaticBody;
+		PolygonShape shape = new PolygonShape();
+		tileWidth = collisionLayer.getTileWidth()*scale;
+		tileHeight = collisionLayer.getTileHeight()*scale;
+		
+		shape.setAsBox((tileWidth/2)/Coords.ratio,(tileHeight/2)/Coords.ratio);
+		FixtureDef fixtureDef = new FixtureDef();
+		ChainShape cs = new ChainShape();
+		Vector2[] vertices =new Vector2[4];
+		for(int i=0;i<shape.getVertexCount();i++) {
+			Vector2 v = new Vector2();
+			shape.getVertex(i,v);
+			vertices[i] = v;
+		}
+		cs.createChain(vertices);
+		fixtureDef.shape = cs;
+		fixtureDef.density = 1;
+		for(int i=collisionLayer.getWidth();i>=0;i--) {
+			for(int j=collisionLayer.getHeight();j>=0;j--) {
+				TiledMapTileLayer.Cell c = collisionLayer.getCell(i,j);
+				if(c!=null && c.getTile().getProperties().containsKey("block")) {
+					bodyDef.position.set(Coords.gameToBox(i *tileWidth + tileWidth/2,j*tileHeight + tileHeight /2));
+					Body b = world.createBody(bodyDef);
+					b.setUserData(this);
+					Fixture f = b.createFixture(fixtureDef);
+					tileBodies.add(b);
 				}
 			}
 		}
-		tl = new Vector2(0,0);
-		tr = new Vector2(0,0);
-		bl = new Vector2(0,0);
-		br = new Vector2(0,0);
-	}
-	public Array<Rectangle> tilesNear(Rectangle rect) {
-		Array<Rectangle> out = new Array<>();
-		tl.set(rect.x,rect.y+rect.height);
-		tr.set(rect.x+rect.width,rect.y+rect.height);
-		bl.set(rect.x,rect.y);
-		br.set(rect.x+rect.width,rect.y);
-		
-		tl.scl(1/8f).set((int)tl.x,(int)tl.y);
-		tr.scl(1/8f).set((int)tr.x,(int)tr.y);
-		bl.scl(1/8f).set((int)bl.x,(int)bl.y);
-		br.scl(1/8f).set((int)br.x,(int)br.y);
-		try {
-			for (int i = (int) bl.x; i <= (int) br.x; i++) {
-				for (int j = (int) bl.y; j <= (int) tl.y; j++) {
-					if(collisionTiles[i][j]!=null)
-						out.add(collisionTiles[i][j]);
-				}
-			}
-		}
-		catch(IndexOutOfBoundsException e) {
-			return out;
-		}
-		return out;
 	}
 	public void draw(OrthographicCamera camera) {
 		renderer.setView(camera);
