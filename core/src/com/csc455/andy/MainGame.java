@@ -16,30 +16,55 @@ import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
 
+import java.io.File;
+
+enum ScreenState {
+	SHOWN,HIDDEN;
+}
 public class MainGame implements Screen {
 	final Homework5 game;
 	SpriteBatch batch;
 	OrthographicCamera camera;
 	MyMap map;
 	Player player;
-	
+	World world;
+	ScreenState screenState;
+	Box2DDebugRenderer debugRenderer;
+	Array<Gun> guns;
+	public static char fs = File.separatorChar;
 	public MainGame(final Homework5 game) {
+		guns = new Array<>();
 		this.game = game;
 		camera = new OrthographicCamera();
 		batch = game.batch;
-		camera.setToOrtho(false,384,216);
-		player = new Player(new TextureAtlas(Gdx.files.internal("PlayerCharacter.atlas")));
-		map = new MyMap("tstMap.tmx",camera,.5f);
+		world = new World(new Vector2(0,-30f),true);
 		
+		camera.setToOrtho(false,384,216);
+		
+		player = new Player(new TextureAtlas(Gdx.files.internal("sprites"+ File.separator+"pc"+File.separator+ "PlayerCharacter.atlas")),world);
+		map = new MyMap("maps"+File.separator + "tstMap" +File.separator+ "tstMap.tmx",camera,.5f,world);
+		screenState = ScreenState.HIDDEN;
+		debugRenderer = new Box2DDebugRenderer();
+		Gun pistol = new Pistol(10,"sprites"+MainGame.fs+"guns"+MainGame.fs+"pistol"+MainGame.fs+"Pistol.atlas");
+		guns.add(pistol);
+		player.pickup(pistol);
 	}
 	@Override
 	public void show() {
-	
+		screenState = ScreenState.SHOWN;
 	}
 	
 	@Override
 	public void render(float delta) {
-		player.move(camera,map);
+		float dt;
+		if(screenState == ScreenState.HIDDEN)
+			dt = 0;
+		else
+			dt = Gdx.graphics.getDeltaTime();
+		player.update(camera,dt);
+		guns.forEach(p -> p.update(dt));
+		world.step(dt,6,2);
+		
 		
 		draw(delta);
 	}
@@ -48,10 +73,12 @@ public class MainGame implements Screen {
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		batch.setProjectionMatrix(camera.combined);
 		
+		
 		map.draw(camera);
 		batch.begin();
 		player.draw(batch);
 		batch.end();
+		debugRenderer.render(world,camera.combined);
 		camera.update();
 	}
 	@Override
@@ -61,17 +88,17 @@ public class MainGame implements Screen {
 	
 	@Override
 	public void pause() {
-	
+		screenState = ScreenState.HIDDEN;
 	}
 	
 	@Override
 	public void resume() {
-	
+		screenState = ScreenState.SHOWN;
 	}
 	
 	@Override
 	public void hide() {
-	
+		screenState = ScreenState.HIDDEN;
 	}
 	
 	@Override
