@@ -8,6 +8,7 @@ import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.*;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
@@ -32,6 +33,7 @@ public class MainGame implements Screen {
 	Box2DDebugRenderer debugRenderer;
 	Array<Gun> guns;
 	public static char fs = File.separatorChar;
+
 	public MainGame(final Homework5 game) {
 		guns = new Array<>();
 		this.game = game;
@@ -69,9 +71,10 @@ public class MainGame implements Screen {
 		draw(delta);
 	}
 	public void draw(float delta) {
-		Gdx.gl.glClearColor(1,1,1,1);
+		Gdx.gl.glClearColor(0,0,1,1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		batch.setProjectionMatrix(camera.combined);
+		sr.setProjectionMatrix(camera.combined);
 		
 		
 		map.draw(camera);
