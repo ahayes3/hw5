@@ -68,14 +68,6 @@ public class MyMap implements Disposable {
 		renderer.setView(camera);
 		renderer.render();
 	}
-	public void debugDraw(ShapeRenderer sr) {
-		for(int i = 0; i< collisionTiles.length; i++) {
-			for(int j = 0; j< collisionTiles[i].length; j++) {
-				if(collisionTiles[i][j] != null)
-					sr.rect(collisionTiles[i][j].x,collisionTiles[i][j].y,collisionTiles[i][j].width,collisionTiles[i][j].height);
-			}
-		}
-	}
 	@Override
 	public void dispose() {
 		manager.dispose();

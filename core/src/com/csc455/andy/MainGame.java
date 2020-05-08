@@ -74,7 +74,6 @@ public class MainGame implements Screen {
 		Gdx.gl.glClearColor(0,0,1,1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		batch.setProjectionMatrix(camera.combined);
-		sr.setProjectionMatrix(camera.combined);
 		
 		
 		map.draw(camera);
