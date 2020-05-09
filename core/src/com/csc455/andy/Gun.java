@@ -21,9 +21,10 @@ public abstract class Gun {
 	Array<Bullet> bullets;
 	Body body;
 	float scale;
-	private final Vector2 barrel, grip;
+	Vector2 barrel, grip;
 	Vector2 size;
 	Dimension dimension;
+	boolean flipped;
 	
 	public Gun(int ammo, int damage, float delay, int slot, TextureAtlas atlas, Firemode firemode,Vector2 position,Vector2 barrelRatio,Vector2 gripRatio,float scale,Dimension dimension,World world) {
 		this.ammo = ammo;
@@ -32,6 +33,7 @@ public abstract class Gun {
 		this.delay = delay;
 		this.slot = slot;
 		this.scale = scale;
+		this.flipped = false;
 		
 		stateTime = 0;
 		timer = .3f;
@@ -49,14 +51,15 @@ public abstract class Gun {
 		firingAnimation = new Animation<>(.2f/animationRegions.size,animationRegions);
 		current = idle;
 		
-		size = Coords.gameToBox(new Vector2(idle.getRegionWidth()*scale,idle.getRegionHeight()*scale));
-		grip = new Vector2(size.x * gripRatio.x, size.y * gripRatio.y);
-		barrel = new Vector2( size.x * barrelRatio.x, size.y * barrelRatio.y);
+		size = Utils.gameToBox(new Vector2(idle.getRegionWidth()*scale,idle.getRegionHeight()*scale));
+		grip = new Vector2(scale*size.x * gripRatio.x, scale* size.y * gripRatio.y);
+		barrel = new Vector2( scale* size.x * barrelRatio.x, scale* size.y * barrelRatio.y);
 		BodyDef bdef = new BodyDef();
 		bdef.type = BodyDef.BodyType.DynamicBody;
-		bdef.position.set(Coords.gameToBox(position));
+		bdef.position.set(Utils.gameToBox(position));
 		bdef.gravityScale = 0;
 		body = world.createBody(bdef);
+		body.setUserData(this);
 		PolygonShape ps = new PolygonShape();
 		ps.setAsBox((size.x/2f),(size.y/2f));
 		FixtureDef fdef = new FixtureDef();
@@ -65,6 +68,7 @@ public abstract class Gun {
 		fdef.filter.maskBits =0;
 		fdef.filter.categoryBits = 5;
 		body.createFixture(fdef);
+		
 	}
 	public void update(float delta) {
 		timer += delta;
@@ -82,28 +86,49 @@ public abstract class Gun {
 	//use box coords
 	public void setPosition(float x,float y,float angle) {
 		Vector2 local = body.getLocalPoint(new Vector2(x,y));
-		local.add(grip);
+		if(flipped)
+			local.add(grip.x,-grip.y);
+		else
+			local.add(grip);
 		body.setTransform(body.getWorldPoint(local),angle);
 	}
 	public void addAmmo(int ammo) {
 		this.ammo += ammo;
 	}
-	public void shoot(World world,Vector2 position,Vector2 angle,Body owner) {
+	public Bullet shoot(World world,Dimension dimension,Body owner) {
 		if(firingAnimation.isAnimationFinished(stateTime)) {
 			stateTime = 0;
-			fire(world,position,angle,owner);
+			Bullet b = fire(world,dimension,owner);
+			bullets.add(b);
+			return b;
 		}
+		return null;
 	}
+	public abstract Bullet fire(World world,Dimension dimension, Body owner);
+	
 	public Vector2 getGrip() {
 		return body.getWorldPoint(grip);
 	}
 	public Vector2 getBarrel() {
 		return body.getWorldPoint(barrel);
 	}
-	public abstract void fire(World world, Vector2 position, Vector2 angle, Body owner);
+	public Bullet createBullet(Vector2 position,Vector2 velocity,Body owner,Dimension dimension,World world) {
+	return new Bullet(position,velocity,damage,owner,dimension,world);
+	}
 	public void draw(SpriteBatch batch) {
 		//Vector2 pos = Coords.boxToGame(body.getPosition());
-		Vector2 pos = Coords.boxToGame(body.getWorldPoint(new Vector2(-size.x/2f,-size.y/2f)));
+		System.out.println(body.getAngle());
+		if((body.getAngle() <= Math.PI/2 && body.getAngle() > -Math.PI/2 ) && current.isFlipY()) {
+			current.flip(false, true);
+			flipped =false;
+		}
+		else if((body.getAngle() > Math.PI/2 || body.getAngle() < -Math.PI/2) && !current.isFlipY()) {
+			current.flip(false, true);
+			flipped = true;
+		}
+		
+		Vector2 pos = Utils.boxToGame(body.getWorldPoint(new Vector2(-size.x/2f,-size.y/2f)));
 		batch.draw(current,pos.x,pos.y,0,0,current.getRegionWidth(),current.getRegionHeight(),scale,scale, (float) (body.getAngle() * (180/Math.PI)));
+		bullets.forEach(p -> p.draw(batch));
 	}
 }

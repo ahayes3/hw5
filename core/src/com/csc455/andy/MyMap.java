@@ -53,10 +53,10 @@ public class MyMap implements Disposable {
 		tileHeight = ((TiledMapTileLayer) present.getLayers().get(0)).getTileHeight()*scale;
 		
 		
-		shape.setAsBox((tileWidth/2)/Coords.ratio,(tileHeight/2)/Coords.ratio);
+		shape.setAsBox((tileWidth/2)/ Utils.pixelRatio,(tileHeight/2)/ Utils.pixelRatio);
 		FixtureDef fixtureDef = new FixtureDef();
 		ChainShape cs = new ChainShape();
-		Vector2[] vertices =new Vector2[4];
+		Vector2[] vertices =new Vector2[5];
 		
 		
 		for(int i=0;i<shape.getVertexCount();i++) {
@@ -64,12 +64,15 @@ public class MyMap implements Disposable {
 			shape.getVertex(i,v);
 			vertices[i] = v;
 		}
+		Vector2 v= new Vector2();
+		shape.getVertex(0,v);
+		vertices[4] = v;
 		cs.createChain(vertices);
 		fixtureDef.shape = cs;
 		fixtureDef.density = 1;
 		
-		fixtureDef.filter.maskBits =MainGame.PAST;
-		fixtureDef.filter.categoryBits=MainGame.PAST;
+		fixtureDef.filter.maskBits =Utils.PAST_BITS|Utils.PLAYER_BITS|Utils.BULLET_BITS;
+		fixtureDef.filter.categoryBits=Utils.PAST_BITS;
 		
 		pastLayer = (TiledMapTileLayer) past.getLayers().get("collision");
 		presentLayer = (TiledMapTileLayer) present.getLayers().get("collision");
@@ -78,7 +81,7 @@ public class MyMap implements Disposable {
 			for(int j = pastLayer.getHeight(); j>=0; j--) {
 				TiledMapTileLayer.Cell c = pastLayer.getCell(i,j);
 				if(c!=null && c.getTile().getProperties().containsKey("block")) {
-					bodyDef.position.set(Coords.gameToBox(i *tileWidth + tileWidth/2,j*tileHeight + tileHeight /2));
+					bodyDef.position.set(Utils.gameToBox(i *tileWidth + tileWidth/2,j*tileHeight + tileHeight /2));
 					Body b = world.createBody(bodyDef);
 					b.setUserData(this);
 					Fixture f = b.createFixture(fixtureDef);
@@ -87,13 +90,13 @@ public class MyMap implements Disposable {
 			}
 		}
 
-		fixtureDef.filter.categoryBits = MainGame.PRESENT;
-		fixtureDef.filter.maskBits = MainGame.PRESENT;
+		fixtureDef.filter.categoryBits = Utils.PRESENT_BITS;
+		fixtureDef.filter.maskBits = Utils.BULLET_BITS|Utils.PLAYER_BITS|Utils.PRESENT_BITS;
 		for(int i = presentLayer.getWidth(); i>=0; i--) {
 			for(int j = presentLayer.getHeight(); j>=0; j--) {
 				TiledMapTileLayer.Cell c = presentLayer.getCell(i,j);
 				if(c!=null && c.getTile().getProperties().containsKey("block")) {
-					bodyDef.position.set(Coords.gameToBox(i *tileWidth + tileWidth/2,j*tileHeight + tileHeight /2));
+					bodyDef.position.set(Utils.gameToBox(i *tileWidth + tileWidth/2,j*tileHeight + tileHeight /2));
 					Body b = world.createBody(bodyDef);
 					b.setUserData(this);
 					Fixture f = b.createFixture(fixtureDef);

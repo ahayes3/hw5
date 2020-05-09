@@ -1,6 +1,5 @@
 package com.csc455.andy;
 
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
@@ -13,7 +12,11 @@ public class Pistol extends Gun {
 	}
 	
 	@Override
-	public void fire(World world, Vector2 position, Vector2 angle, Body owner) {
-		//return new Bullet(position,angle.scl(100),3,1,damage,MainGame.bullet,owner,world);
+	public Bullet fire(World world,Dimension dimension, Body owner) {
+		Vector2 pos = barrel.cpy();
+		if(flipped)
+			pos.sub(0,Bullet.textureRegion.getRegionHeight()/ Utils.pixelRatio);
+		
+		return createBullet(body.getWorldPoint(pos.add(Bullet.textureRegion.getRegionWidth()/ Utils.pixelRatio,0)),body.getTransform().getOrientation().scl(100),owner,dimension,world);
 	}
 }

@@ -22,8 +22,7 @@ enum ScreenState {
 	SHOWN,HIDDEN;
 }
 public class MainGame implements Screen {
-	final static short PRESENT = 2;
-	final static short PAST = 1;
+	static Dimension dimension;
 	final Homework5 game;
 	SpriteBatch batch;
 	OrthographicCamera camera;
@@ -31,7 +30,6 @@ public class MainGame implements Screen {
 	Player player;
 	World world;
 	ScreenState screenState;
-	static TextureRegion bullet = new TextureRegion(new Texture("sprites/guns/bullet.png"));
 	Box2DDebugRenderer debugRenderer;
 	Array<Gun> guns;
 	short state;
@@ -39,7 +37,6 @@ public class MainGame implements Screen {
 	public static char fs = File.separatorChar;
 	TextureAtlas pistolAtlas;
 	public MainGame(final Homework5 game) {
-		state = PRESENT;
 		guns = new Array<>();
 		this.game = game;
 		camera = new OrthographicCamera();
@@ -58,6 +55,9 @@ public class MainGame implements Screen {
 		player.pickup(pistol);
 		player.selection = player.inventory.get(0);
 		present = true;
+		Bullet.textureRegion = new TextureRegion(new Texture("sprites/guns/bullet.png"));
+		dimension = Dimension.PRESENT;
+		world.setContactListener(new MyContactListener());
 		
 	}
 	@Override
@@ -93,7 +93,7 @@ public class MainGame implements Screen {
 		player.draw(batch);
 		batch.end();
 		
-		debugRenderer.render(world,camera.combined.scl(8));
+		//debugRenderer.render(world,camera.combined.scl(8));
 		camera.update();
 	}
 	@Override
@@ -119,5 +119,6 @@ public class MainGame implements Screen {
 		player.dispose();
 		map.dispose();
 		pistolAtlas.dispose();
+		Bullet.textureRegion.getTexture().dispose();
 	}
 }

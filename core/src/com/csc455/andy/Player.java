@@ -11,8 +11,6 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.physics.box2d.*;
-import com.badlogic.gdx.physics.box2d.joints.RevoluteJoint;
-import com.badlogic.gdx.physics.box2d.joints.RevoluteJointDef;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 
@@ -20,7 +18,7 @@ enum Movement {
 	STANDING, WALKING, SPRINTING;
 }
 
-public class Player implements Disposable {
+public class Player implements Disposable,Hittable {
 	TextureAtlas atlas;
 	Animation<TextureRegion> walkAnimation;
 	TextureRegion standing, current,armRegion;
@@ -59,16 +57,17 @@ public class Player implements Disposable {
 		
 		BodyDef bodyDef = new BodyDef();
 		bodyDef.type = BodyDef.BodyType.DynamicBody;
-		bodyDef.position.set(Coords.gameToBox(position.x + standing.getRegionWidth() / 2f, position.y + standing.getRegionHeight() / 2f));
+		bodyDef.position.set(Utils.gameToBox(position.x + standing.getRegionWidth() / 2f, position.y + standing.getRegionHeight() / 2f));
 		body = world.createBody(bodyDef);
 		body.setUserData(this);
 		
 		PolygonShape shape = new PolygonShape();
-		shape.setAsBox((standing.getRegionWidth() / 2f) / Coords.ratio, (standing.getRegionHeight() / 2f) / Coords.ratio);
+		shape.setAsBox((standing.getRegionWidth() / 2f) / Utils.pixelRatio, (standing.getRegionHeight() / 2f) / Utils.pixelRatio);
 		FixtureDef fixtureDef = new FixtureDef();
 		dimension = Dimension.PRESENT;
-		fixtureDef.filter.categoryBits = MainGame.PRESENT;
 		fixtureDef.shape = shape;
+		fixtureDef.filter.categoryBits = Utils.PLAYER_BITS;
+		fixtureDef.filter.maskBits = Utils.PRESENT_BITS;
 		fixtureDef.density = 1;
 		fixtureDef.friction = 0;
 		Fixture fixture = body.createFixture(fixtureDef);
@@ -82,14 +81,12 @@ public class Player implements Disposable {
 		jumped = false;
 		width = 7;
 		
-		bodyDef.position.set(Coords.gameToBox(position.add(width / 2f, height / 2f).add(3, 3)));
-		fixtureDef.filter.groupIndex = -1;
-		fixtureDef.filter.groupIndex = 5;
-		fixtureDef.filter.maskBits = 0;
+		bodyDef.position.set(Utils.gameToBox(position.add(width / 2f, height / 2f).add(3, 3)));
+		fixtureDef.filter.groupIndex = -5;
 		fixtureDef.density = .001f;
 		armRegion.setRegionWidth((int) (armRegion.getRegionWidth()*1.3f));
 		armRegion.setRegionHeight((int) (armRegion.getRegionHeight()*1.3f));
-		Vector2 size = Coords.gameToBox(armRegion.getRegionWidth()/2f, armRegion.getRegionHeight()/2f);
+		Vector2 size = Utils.gameToBox(armRegion.getRegionWidth()/2f, armRegion.getRegionHeight()/2f);
 		shape.setAsBox(size.x, size.y,new Vector2(size.x,0),0);
 		
 		fixtureDef.shape = shape;
@@ -118,15 +115,19 @@ public class Player implements Disposable {
 			move(camera, world, delta);
 			Filter f = new Filter();
 			
-			if (present && body.getFixtureList().get(0).getFilterData().categoryBits == MainGame.PAST) {
-				f.categoryBits = MainGame.PRESENT;
-				f.maskBits = MainGame.PRESENT;
+			if (present && (body.getFixtureList().get(0).getFilterData().maskBits & Utils.PRESENT_BITS) == 0) {
+//				f.categoryBits = Utils.PRESENT_BITS | Utils.PLAYER_BITS;
+//				f.maskBits = Utils.PRESENT_BITS;
+				f.categoryBits = Utils.PLAYER_BITS;
+				f.maskBits = Utils.PRESENT_BITS;
 				body.getFixtureList().get(0).setFilterData(f);
 				map.swapDraw();
 			}
-			else if(!present && body.getFixtureList().get(0).getFilterData().categoryBits == MainGame.PRESENT) {
-				f.categoryBits = MainGame.PAST;
-				f.maskBits = MainGame.PAST;
+			else if(!present && (body.getFixtureList().get(0).getFilterData().maskBits & Utils.PAST_BITS) == 0) {
+//				f.categoryBits = MainGame.PAST;
+//				f.maskBits = MainGame.BULLETMASK|MainGame.PAST;
+				f.categoryBits = Utils.PLAYER_BITS;
+				f.maskBits = Utils.PAST_BITS;
 				body.getFixtureList().get(0).setFilterData(f);
 				map.swapDraw();
 			}
@@ -188,22 +189,22 @@ public class Player implements Disposable {
 		
 		arm.setTransform(body.getPosition(), (float) (aim.angleRad()));
 		
-		Vector2 hand = arm.getWorldPoint(Coords.gameToBox(new Vector2(armRegion.getRegionWidth(),0)));
+		Vector2 hand = arm.getWorldPoint(Utils.gameToBox(new Vector2(armRegion.getRegionWidth(),0)));
 		
 		if(selection != null) {
-			selection.setPosition(body.getPosition().add(aim.nor().scl((armRegion.getRegionWidth())/Coords.ratio)),aim.angleRad());
+			selection.setPosition(body.getPosition().add(aim.nor().scl((armRegion.getRegionWidth())/ Utils.pixelRatio)),aim.angleRad());
 		}
 		
-		position = Coords.boxToGame(body.getPosition().x, body.getPosition().y).sub(0, height);
+		position = Utils.boxToGame(body.getPosition().x, body.getPosition().y).sub(0, height);
 		position.sub(standing.getRegionWidth() / 2f, -standing.getRegionWidth());
 		camera.position.set(position.x, position.y, 0);
 		
 		
 		
-//		if (selection.firemode == Gun.Firemode.AUTO && Gdx.input.isTouched())
-//			selection.shoot(world,new Vector2(position.x + width/2f,position.y + height/2f).add(aim.cpy().scl(selection.getEnd().len())),aim.cpy().nor(),body);
-//		else if (Gdx.input.justTouched())
-//			selection.shoot(world,new Vector2(position.x + width/2f,position.y + height/2f),aim.cpy().nor(),body);
+		if (selection.firemode == Gun.Firemode.AUTO && Gdx.input.isTouched())
+			selection.shoot(world,dimension,body);
+		else if (Gdx.input.justTouched())
+			selection.shoot(world,dimension,body);
 	}
 	
 	public void draw(SpriteBatch batch) {//batch must already have begun and must be ended after
@@ -211,6 +212,11 @@ public class Player implements Disposable {
 			walkAnimation.setFrameDuration(.07f);
 		else if (movement == Movement.WALKING)
 			walkAnimation.setFrameDuration(.1f);
+		
+		if(body.getLinearVelocity().x < 0)
+			walkAnimation.setPlayMode(Animation.PlayMode.LOOP_REVERSED);
+		else
+			walkAnimation.setPlayMode(Animation.PlayMode.LOOP);
 		
 		if (movement != Movement.STANDING) {
 			stateTime += Gdx.graphics.getDeltaTime();
@@ -220,13 +226,14 @@ public class Player implements Disposable {
 			stateTime = 0;
 			current = standing;
 		}
+		
 		if ((aim.angle() <= 90 || aim.angle() > 270) && current.isFlipX()) {
 			current.flip(true, false);
 		}
-		else if (aim.angle() >= 90 && aim.angle() < 270 && !current.isFlipX()) {
+		else if (aim.angle() > 90 && aim.angle() < 270 && !current.isFlipX()) {
 			current.flip(true, false);
 		}
-		Vector2 armPos = Coords.boxToGame(arm.getPosition());
+		Vector2 armPos = Utils.boxToGame(arm.getPosition());
 		batch.draw(current, position.x, position.y, 4f, 7f, current.getRegionWidth(), current.getRegionHeight(), 1, 1, 0);
 		batch.draw(armRegion,armPos.x,armPos.y,0,armRegion.getRegionHeight()/2f,armRegion.getRegionWidth(),armRegion.getRegionHeight(),1,1, (float) (arm.getAngle() * (180/Math.PI)));
 		//selection.draw(batch, position.x + width / 2f, position.y + height / 2f, 0, selection.armHeight(), aim.angle());
@@ -241,5 +248,13 @@ public class Player implements Disposable {
 	public void dispose() {
 		atlas.dispose();
 		
+	}
+	public Body getBody() {
+		return body;
+	}
+	@Override
+	public void hit(Bullet b) {
+		health -= b.damage;
+		body.applyLinearImpulse(b.velocity,body.getWorldCenter(),true);
 	}
 }
