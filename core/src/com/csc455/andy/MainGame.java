@@ -6,11 +6,14 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.World;
+import com.badlogic.gdx.physics.box2d.utils.Box2DBuild;
 import com.badlogic.gdx.utils.Array;
 
 import java.io.File;
@@ -28,6 +31,7 @@ public class MainGame implements Screen {
 	Player player;
 	World world;
 	ScreenState screenState;
+	static TextureRegion bullet = new TextureRegion(new Texture("sprites/guns/bullet.png"));
 	Box2DDebugRenderer debugRenderer;
 	Array<Gun> guns;
 	short state;
@@ -47,8 +51,9 @@ public class MainGame implements Screen {
 		map = new MyMap("maps/tstMap/past/pastTest.tmx","maps/tstMap/present/presentTest.tmx",camera,.5f,world,true);
 		screenState = ScreenState.HIDDEN;
 		debugRenderer = new Box2DDebugRenderer();
+		
 		pistolAtlas = new TextureAtlas("sprites"+MainGame.fs+"guns"+MainGame.fs+"pistol"+MainGame.fs+"Pistol.atlas");
-		Gun pistol = new Pistol(10,pistolAtlas);
+		Gun pistol = new Pistol(10,pistolAtlas,new Vector2(0,0),player.dimension,world);
 		guns.add(pistol);
 		player.pickup(pistol);
 		player.selection = player.inventory.get(0);
@@ -70,11 +75,9 @@ public class MainGame implements Screen {
 		
 		if(Gdx.input.isKeyJustPressed(Input.Keys.Q))
 			present = !present;
-		
-		player.update(camera,present,map,dt);
+		player.update(camera,present,map,world,dt);
 		guns.forEach(p -> p.update(dt));
 		world.step(dt,6,2);
-		
 		
 		draw(delta);
 	}
@@ -86,9 +89,11 @@ public class MainGame implements Screen {
 		
 		map.draw(camera);
 		batch.begin();
+		guns.forEach(p -> p.draw(batch));
 		player.draw(batch);
 		batch.end();
-		debugRenderer.render(world,camera.combined);
+		
+		debugRenderer.render(world,camera.combined.scl(8));
 		camera.update();
 	}
 	@Override

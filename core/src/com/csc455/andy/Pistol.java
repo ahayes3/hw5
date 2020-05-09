@@ -3,46 +3,17 @@ package com.csc455.andy;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.utils.Disposable;
+import com.badlogic.gdx.physics.box2d.*;
 
 public class Pistol extends Gun {
-	public Pistol(int damage,TextureAtlas atlas) {
-		super(-1,damage,.3f,0,atlas,Firemode.SINGLE);
-	}
-	/*public Pistol(int damage,String atlasPath) {
-		super(-1,damage,.3f,0,new TextureAtlas(atlasPath),Firemode.SINGLE);
-	}*/
-	
-	@Override
-	public void shoot() {
-		if(firingAnimation.isAnimationFinished(stateTime)) {
-			stateTime = 0;
-			
-			//Shoot
-		}
+	private static final float scale = .2f;
+	public Pistol(int damage,TextureAtlas atlas,Vector2 position,Dimension dimension, World world) {
+		super(-1,damage,.3f,0,atlas,Firemode.SINGLE,position,new Vector2(1f,14/17f),new Vector2(4/26f,6/17f),scale,dimension,world);
 		
 	}
-	//Position of hand passed in
-	public void draw(SpriteBatch batch,float x,float y,float originX,float originY,float angle) {
-		if ((angle <= 90 || angle > 270) && current.isFlipY())
-			current.flip(false, true);
-		else if (angle >= 90 && angle < 270 && !current.isFlipY()) {
-			current.flip(false, true);
-		}
-		batch.draw(current,x,y,originX,originY,current.getRegionWidth()/5f,current.getRegionHeight()/5f,1,1,angle);
-	}
-	public Vector2 getEnd() {
-		//TODO
-		return null;
-	}
 	
 	@Override
-	public float armHeight() {
-		return 7/5f;
-	}
-	
-	@Override
-	public Gun clone() {
-		return new Pistol(damage,atlas);
+	public void fire(World world, Vector2 position, Vector2 angle, Body owner) {
+		//return new Bullet(position,angle.scl(100),3,1,damage,MainGame.bullet,owner,world);
 	}
 }
