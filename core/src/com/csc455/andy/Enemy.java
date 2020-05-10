@@ -4,9 +4,11 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.Fixture;
+import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 
@@ -24,7 +26,10 @@ abstract class Enemy implements Hittable, Disposable {
 	public Enemy(TextureAtlas atlas,int health,Dimension dimension) {
 		this.atlas = atlas;
 		this.health = health;
-		this.dimension = dimension;
+		if(dimension == Dimension.PAST)
+			this.dimension = Dimension.PAST;
+		else if(dimension == Dimension.PRESENT)
+			this.dimension = Dimension.PRESENT;
 		TextureRegion idle=null;
 		for(TextureAtlas.AtlasRegion reg : atlas.getRegions()) {
 			if(reg.name.toLowerCase().contains("idle"))
@@ -36,8 +41,9 @@ abstract class Enemy implements Hittable, Disposable {
 		dead =false;
 		stateTime = 0;
 	}
-	abstract void think(float delta);
+	abstract void think(float delta, World world);
 	abstract void draw(SpriteBatch batch, Dimension dimension);
+	abstract void drawShapes(ShapeRenderer sr,Dimension dimension);
 	
 	public void die() {
 		stateTime = 0;

@@ -14,18 +14,21 @@ public class Homework5 extends Game
 	public BitmapFont font;
 	public Array<Screen> screens;
 	public Skin skin;
+	Screen lastScreen;
+	public Screen menu;
 	@Override
 	public void create () {
 		skin = new Skin(Gdx.files.internal("skin/uiskin.json"));
 		batch = new SpriteBatch();
 		font = new BitmapFont();
 		screens = new Array<>();
-		
-		screens.add(new MainMenu(this));
+		menu = new MainMenu(this);
+		screens.add(menu);
 		screens.add(new DeathScreen(this));
-		screens.add(new MainGame(this));
+//		screens.add(new MainGame(this,-1));
+//		screens.add(new MainGame(this,1));
 		
-		this.setScreen(screens.get(0));
+		this.setScreen(menu);
 	}
 
 	@Override

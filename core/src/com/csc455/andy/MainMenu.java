@@ -15,9 +15,9 @@ public class MainMenu implements Screen
 {
 	final Homework5 game;
 	OrthographicCamera camera;
-	TextButton testLevel;
+	TextButton testLevel,level1;
 	SpriteBatch batch;
-	Rectangle testRect;
+	Rectangle testRect,level1Rect;
 	public MainMenu(final Homework5 game) {
 		this.game = game;
 		this.batch = game.batch;
@@ -27,11 +27,19 @@ public class MainMenu implements Screen
 		testLevel.getLabel().setScale(.25f);
 		testLevel.setPosition(camera.viewportWidth/2 - 150,camera.viewportHeight - 50);
 		testLevel.setSize(150,50);
+		level1 = new TextButton("Level 1",game.skin);
+		level1.getLabel().setScale(.25f);
+		level1.setPosition(camera.viewportWidth/2f,camera.viewportHeight -50);
+		level1.setSize(150,50);
+		
 		testRect = new Rectangle();
 		testRect.x=camera.viewportWidth/2 - 100;
 		testRect.y = camera.viewportHeight - 50;
 		testRect.width=100;
 		testRect.height=50;
+		
+		level1Rect = new Rectangle(testRect);
+		level1Rect.setPosition(level1.getX(),level1.getY());
 		
 	}
 	@Override
@@ -53,15 +61,21 @@ public class MainMenu implements Screen
 			Vector2 mousePos = new Vector2(unprojected.x,unprojected.y);
 			if(testRect.contains(mousePos))
 				testRect();
+			else if(level1Rect.contains(mousePos))
+				level1();
 			
 		}
 		batch.begin();
 		testLevel.draw(batch,1);
+		level1.draw(batch,1);
 		batch.end();
 		camera.update();
 	}
 	public void testRect() {
-		game.setScreen(game.screens.get(2));
+		game.setScreen(new MainGame(game,-1));
+	}
+	public void level1() {
+		game.setScreen(new MainGame(game,1));
 	}
 	@Override
 	public void resize(int width, int height)

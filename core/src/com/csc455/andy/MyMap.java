@@ -2,6 +2,8 @@ package com.csc455.andy;
 
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.maps.MapLayer;
+import com.badlogic.gdx.maps.MapObject;
 import com.badlogic.gdx.maps.MapRenderer;
 import com.badlogic.gdx.maps.objects.RectangleMapObject;
 import com.badlogic.gdx.maps.tiled.TiledMap;
@@ -13,16 +15,21 @@ import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 
+import java.util.Iterator;
+
 
 public class MyMap implements Disposable {
 	TiledMap past,present;
 	MapRenderer presentRenderer,pastRenderer,draw;
 	AssetManager manager;
 	Array<Body> tileBodies;
-	TiledMapTileLayer presentLayer,pastLayer,presentObjects,pastObjects;
+	TiledMapTileLayer presentLayer,pastLayer;
+	MapLayer presentObjects,pastObjects;
 	Vector2 spawn;
 	float tileWidth,tileHeight;
-	public MyMap(String pastPath,String presentPath, OrthographicCamera camera, float scale,World world,boolean startPresent) {
+	MainGame level;
+	public MyMap(String pastPath,String presentPath, OrthographicCamera camera, float scale,World world,boolean startPresent,MainGame level) {
+		this.level = level;
 		manager = new AssetManager();
 		TmxMapLoader loader = new TmxMapLoader();
 		manager.setLoader(TiledMap.class,loader);
@@ -77,8 +84,8 @@ public class MyMap implements Disposable {
 		
 		pastLayer = (TiledMapTileLayer) past.getLayers().get("collision");
 		presentLayer = (TiledMapTileLayer) present.getLayers().get("collision");
-		pastObjects = (TiledMapTileLayer) past.getLayers().get("objects");
-		presentObjects = (TiledMapTileLayer) present.getLayers().get("objects");
+		pastObjects =  past.getLayers().get("objects");
+		presentObjects =  present.getLayers().get("objects");
 
 		for(int i = pastLayer.getWidth(); i>=0; i--) {
 			for(int j = pastLayer.getHeight(); j>=0; j--) {
@@ -94,6 +101,11 @@ public class MyMap implements Disposable {
 		}
 		
 		//todo check object for enemy rectangles and spawn them on right map
+		for (MapObject mapObject : pastObjects.getObjects()) {
+			RectangleMapObject next = (RectangleMapObject) mapObject;
+			if (next.getProperties().get("type").equals("trackedRobot"))
+				level.enemies.add(new TrackedRobot(50, Dimension.PAST, next.getRectangle().getPosition(new Vector2()).scl(scale),level.player, world));
+		}
 
 		fixtureDef.filter.categoryBits = Utils.PRESENT_BITS;
 		fixtureDef.filter.maskBits = Utils.BULLET_BITS|Utils.PLAYER_BITS|Utils.PRESENT_BITS|Utils.ENEMY_BITS;
@@ -111,8 +123,17 @@ public class MyMap implements Disposable {
 		}
 		
 		//todo check object for enemy rectangles and spawn them on right map
-		((RectangleMapObject)presentObjects.getObjects().get("spawn")).getRectangle().getPosition(spawn);
+		for (MapObject mapObject : presentObjects.getObjects()) {
+			RectangleMapObject next = (RectangleMapObject) mapObject;
+			if (next.getName().toLowerCase().contains("enemy") &&next.getProperties().get("type").equals("trackedRobot"))
+				level.enemies.add(new TrackedRobot(50, Dimension.PRESENT, next.getRectangle().getPosition(new Vector2()).scl(scale),level.player, world));
+		}
 		
+		if(startPresent)
+			spawn = ((RectangleMapObject)presentObjects.getObjects().get("spawn")).getRectangle().getCenter(new Vector2());
+		else
+			spawn = ((RectangleMapObject)pastObjects.getObjects().get("spawn")).getRectangle().getPosition(new Vector2());
+		spawn.scl(scale);
 	}
 	public Vector2 getSpawn() {
 		return spawn;

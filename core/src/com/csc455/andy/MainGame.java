@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.World;
@@ -41,9 +42,13 @@ public class MainGame extends Stage implements Screen {
 	Array<Enemy> enemies;
 	public static char fs = File.separatorChar;
 	TextureAtlas pistolAtlas;
-	public MainGame(final Homework5 game) {
+	int mapNum;
+	ShapeRenderer shapeRenderer;
+	public MainGame(final Homework5 game,int mapNum) {
+		shapeRenderer = new ShapeRenderer();
 		guns = new Array<>();
 		enemies = new Array<>();
+		this.mapNum = mapNum;
 		
 		this.game = game;
 		camera = new OrthographicCamera();
@@ -52,7 +57,10 @@ public class MainGame extends Stage implements Screen {
 		
 		camera.setToOrtho(false,384,216);
 		player = new Player(new TextureAtlas(Gdx.files.internal("sprites"+ File.separator+"pc"+File.separator+ "PlayerCharacter.atlas")),world);
-		map = new MyMap("maps/tstMap/past/pastTest.tmx","maps/tstMap/present/presentTest.tmx",camera,.5f,world,true);
+		if(mapNum == -1)
+			map = new MyMap("maps/tstMap/past/pastTest.tmx","maps/tstMap/present/presentTest.tmx",camera,.5f,world,true,this);
+		else
+			map = new MyMap("maps/"+mapNum+"/past/past"+mapNum+".tmx","maps/"+mapNum+"/present/present"+1+".tmx",camera,.5f,world,true,this);
 		screenState = ScreenState.HIDDEN;
 		debugRenderer = new Box2DDebugRenderer();
 		
@@ -65,7 +73,7 @@ public class MainGame extends Stage implements Screen {
 		dimension = Dimension.PRESENT;
 		world.setContactListener(new MyContactListener());
 		
-		enemies.add(new TrackedRobot(new TextureAtlas("sprites/enemies/trackedRobot/TrackedRobot.atlas"),50,Dimension.PRESENT,new Vector2(64,50),world));
+		//enemies.add(new TrackedRobot(new TextureAtlas("sprites/enemies/trackedRobot/TrackedRobot.atlas"),50,Dimension.PRESENT,new Vector2(64,50),world));
 		player.setPosition(map.getSpawn().cpy());
 	}
 	@Override
@@ -75,6 +83,7 @@ public class MainGame extends Stage implements Screen {
 	
 	@Override
 	public void render(float delta) {
+		
 		if(player.dead()) {
 			game.setScreen(game.screens.get(1));
 		}
@@ -89,7 +98,7 @@ public class MainGame extends Stage implements Screen {
 			else if(dimension == Dimension.PRESENT)
 				dimension = Dimension.PAST;
 		}
-		enemies.forEach(p -> p.think(dt));
+		enemies.forEach(p -> p.think(dt,world));
 		player.update(camera,dimension,map,world,dt);
 		guns.forEach(p -> p.update(dt));
 		world.step(dt,6,2);
@@ -100,7 +109,7 @@ public class MainGame extends Stage implements Screen {
 		Gdx.gl.glClearColor(1,1,1,1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 		batch.setProjectionMatrix(camera.combined);
-		
+		shapeRenderer.setProjectionMatrix(camera.combined);
 		
 		map.draw(camera);
 		batch.begin();
@@ -110,6 +119,10 @@ public class MainGame extends Stage implements Screen {
 		batch.end();
 		
 		debugRenderer.render(world,camera.combined.scl(8));
+		shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+		enemies.forEach(p -> p.drawShapes(shapeRenderer,dimension));
+		shapeRenderer.end();
+		
 		camera.update();
 	}
 	@Override
@@ -128,6 +141,7 @@ public class MainGame extends Stage implements Screen {
 	@Override
 	public void hide() {
 		screenState = ScreenState.HIDDEN;
+		game.lastScreen = this;
 	}
 	
 	@Override

@@ -288,4 +288,9 @@ public class Player implements Disposable,Hittable {
 		health -= b.damage;
 		body.applyLinearImpulse(b.velocity,body.getWorldCenter(),true);
 	}
+	
+	@Override
+	public void subHealth(int health) {
+		this.health -= health;
+	}
 }

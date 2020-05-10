@@ -77,12 +77,10 @@ public class DeathScreen implements Screen {
 		camera.update();
 	}
 	public void restart() {
-		Screen old  = game.screens.get(2);
-		game.screens.set(2,null);
+		Screen old  = game.lastScreen;
 		old.dispose();
-		Screen newScreen = new MainGame(game);
-		game.screens.set(2,newScreen);
-		game.setScreen(game.screens.get(0));
+		Screen newScreen = game.menu;
+		game.setScreen(game.menu);
 	}
 	@Override
 	public void resize(int width, int height) {
@@ -101,7 +99,7 @@ public class DeathScreen implements Screen {
 	
 	@Override
 	public void hide() {
-	
+		game.lastScreen = this;
 	}
 	
 	@Override
