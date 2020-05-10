@@ -3,6 +3,7 @@ package com.csc455.andy;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.maps.MapRenderer;
+import com.badlogic.gdx.maps.objects.RectangleMapObject;
 import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
@@ -18,7 +19,8 @@ public class MyMap implements Disposable {
 	MapRenderer presentRenderer,pastRenderer,draw;
 	AssetManager manager;
 	Array<Body> tileBodies;
-	TiledMapTileLayer presentLayer,pastLayer;
+	TiledMapTileLayer presentLayer,pastLayer,presentObjects,pastObjects;
+	Vector2 spawn;
 	float tileWidth,tileHeight;
 	public MyMap(String pastPath,String presentPath, OrthographicCamera camera, float scale,World world,boolean startPresent) {
 		manager = new AssetManager();
@@ -30,7 +32,6 @@ public class MyMap implements Disposable {
 		
 		presentRenderer = new OrthogonalTiledMapRenderer(present,scale);
 		presentRenderer.setView(camera);
-		
 		manager.load(pastPath,TiledMap.class);
 		manager.finishLoading();
 		past = manager.get(pastPath,TiledMap.class);
@@ -71,11 +72,13 @@ public class MyMap implements Disposable {
 		fixtureDef.shape = cs;
 		fixtureDef.density = 1;
 		
-		fixtureDef.filter.maskBits =Utils.PAST_BITS|Utils.PLAYER_BITS|Utils.BULLET_BITS;
+		fixtureDef.filter.maskBits =Utils.PAST_BITS|Utils.PLAYER_BITS|Utils.BULLET_BITS|Utils.ENEMY_BITS;
 		fixtureDef.filter.categoryBits=Utils.PAST_BITS;
 		
 		pastLayer = (TiledMapTileLayer) past.getLayers().get("collision");
 		presentLayer = (TiledMapTileLayer) present.getLayers().get("collision");
+		pastObjects = (TiledMapTileLayer) past.getLayers().get("objects");
+		presentObjects = (TiledMapTileLayer) present.getLayers().get("objects");
 
 		for(int i = pastLayer.getWidth(); i>=0; i--) {
 			for(int j = pastLayer.getHeight(); j>=0; j--) {
@@ -89,9 +92,11 @@ public class MyMap implements Disposable {
 				}
 			}
 		}
+		
+		//todo check object for enemy rectangles and spawn them on right map
 
 		fixtureDef.filter.categoryBits = Utils.PRESENT_BITS;
-		fixtureDef.filter.maskBits = Utils.BULLET_BITS|Utils.PLAYER_BITS|Utils.PRESENT_BITS;
+		fixtureDef.filter.maskBits = Utils.BULLET_BITS|Utils.PLAYER_BITS|Utils.PRESENT_BITS|Utils.ENEMY_BITS;
 		for(int i = presentLayer.getWidth(); i>=0; i--) {
 			for(int j = presentLayer.getHeight(); j>=0; j--) {
 				TiledMapTileLayer.Cell c = presentLayer.getCell(i,j);
@@ -105,6 +110,12 @@ public class MyMap implements Disposable {
 			}
 		}
 		
+		//todo check object for enemy rectangles and spawn them on right map
+		((RectangleMapObject)presentObjects.getObjects().get("spawn")).getRectangle().getPosition(spawn);
+		
+	}
+	public Vector2 getSpawn() {
+		return spawn;
 	}
 	public void swapDraw() {
 		if(draw.equals(presentRenderer))

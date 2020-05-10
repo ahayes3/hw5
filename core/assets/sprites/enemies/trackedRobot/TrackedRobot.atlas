@@ -4,34 +4,6 @@ size: 256,32
 format: RGBA8888
 filter: Nearest,Nearest
 repeat: none
-trackedRobot1
-  rotate: false
-  xy: 20, 0
-  size: 20, 27
-  orig: 20, 27
-  offset: 0, 0
-  index: -1
-trackedRobot2
-  rotate: false
-  xy: 40, 0
-  size: 20, 27
-  orig: 20, 27
-  offset: 0, 0
-  index: -1
-trackedRobot3
-  rotate: false
-  xy: 60, 0
-  size: 20, 27
-  orig: 20, 27
-  offset: 0, 0
-  index: -1
-trackedRobot4
-  rotate: false
-  xy: 80, 0
-  size: 20, 27
-  orig: 20, 27
-  offset: 0, 0
-  index: -1
 trackedRobotDeath1
   rotate: false
   xy: 100, 0
@@ -56,6 +28,41 @@ trackedRobotDeath3
 trackedRobotDeath4
   rotate: false
   xy: 0, 0
+  size: 20, 27
+  orig: 20, 27
+  offset: 0, 0
+  index: -1
+trackedRobotIdle
+  rotate: false
+  xy: 80, 0
+  size: 20, 27
+  orig: 20, 27
+  offset: 0, 0
+  index: -1
+trackedRobotMove1
+  rotate: false
+  xy: 80, 0
+  size: 20, 27
+  orig: 20, 27
+  offset: 0, 0
+  index: -1
+trackedRobotMove2
+  rotate: false
+  xy: 20, 0
+  size: 20, 27
+  orig: 20, 27
+  offset: 0, 0
+  index: -1
+trackedRobotMove3
+  rotate: false
+  xy: 40, 0
+  size: 20, 27
+  orig: 20, 27
+  offset: 0, 0
+  index: -1
+trackedRobotMove4
+  rotate: false
+  xy: 60, 0
   size: 20, 27
   orig: 20, 27
   offset: 0, 0

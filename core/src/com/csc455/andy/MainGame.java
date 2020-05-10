@@ -14,14 +14,20 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.physics.box2d.utils.Box2DBuild;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.actions.Actions;
+import com.badlogic.gdx.scenes.scene2d.actions.SequenceAction;
 import com.badlogic.gdx.utils.Array;
 
 import java.io.File;
 
+import static com.badlogic.gdx.scenes.scene2d.actions.Actions.fadeOut;
+import static com.badlogic.gdx.scenes.scene2d.actions.Actions.run;
+
 enum ScreenState {
 	SHOWN,HIDDEN;
 }
-public class MainGame implements Screen {
+public class MainGame extends Stage implements Screen {
 	static Dimension dimension;
 	final Homework5 game;
 	SpriteBatch batch;
@@ -32,12 +38,13 @@ public class MainGame implements Screen {
 	ScreenState screenState;
 	Box2DDebugRenderer debugRenderer;
 	Array<Gun> guns;
-	short state;
-	boolean present;
+	Array<Enemy> enemies;
 	public static char fs = File.separatorChar;
 	TextureAtlas pistolAtlas;
 	public MainGame(final Homework5 game) {
 		guns = new Array<>();
+		enemies = new Array<>();
+		
 		this.game = game;
 		camera = new OrthographicCamera();
 		batch = game.batch;
@@ -54,11 +61,12 @@ public class MainGame implements Screen {
 		guns.add(pistol);
 		player.pickup(pistol);
 		player.selection = player.inventory.get(0);
-		present = true;
 		Bullet.textureRegion = new TextureRegion(new Texture("sprites/guns/bullet.png"));
 		dimension = Dimension.PRESENT;
 		world.setContactListener(new MyContactListener());
 		
+		enemies.add(new TrackedRobot(new TextureAtlas("sprites/enemies/trackedRobot/TrackedRobot.atlas"),50,Dimension.PRESENT,new Vector2(64,50),world));
+		player.setPosition(map.getSpawn().cpy());
 	}
 	@Override
 	public void show() {
@@ -67,15 +75,22 @@ public class MainGame implements Screen {
 	
 	@Override
 	public void render(float delta) {
+		if(player.dead()) {
+			game.setScreen(game.screens.get(1));
+		}
 		float dt;
 		if(screenState == ScreenState.HIDDEN)
 			dt = 0;
 		else
 			dt = Gdx.graphics.getDeltaTime();
-		
-		if(Gdx.input.isKeyJustPressed(Input.Keys.Q))
-			present = !present;
-		player.update(camera,present,map,world,dt);
+		if(Gdx.input.isKeyJustPressed(Input.Keys.Q)) {
+			if(dimension == Dimension.PAST)
+				dimension = Dimension.PRESENT;
+			else if(dimension == Dimension.PRESENT)
+				dimension = Dimension.PAST;
+		}
+		enemies.forEach(p -> p.think(dt));
+		player.update(camera,dimension,map,world,dt);
 		guns.forEach(p -> p.update(dt));
 		world.step(dt,6,2);
 		
@@ -89,11 +104,12 @@ public class MainGame implements Screen {
 		
 		map.draw(camera);
 		batch.begin();
+		enemies.forEach(p -> p.draw(batch,dimension));
 		guns.forEach(p -> p.draw(batch));
 		player.draw(batch);
 		batch.end();
 		
-		//debugRenderer.render(world,camera.combined.scl(8));
+		debugRenderer.render(world,camera.combined.scl(8));
 		camera.update();
 	}
 	@Override
@@ -118,6 +134,7 @@ public class MainGame implements Screen {
 	public void dispose() {
 		player.dispose();
 		map.dispose();
+		guns.forEach(Gun::dispose);
 		pistolAtlas.dispose();
 		Bullet.textureRegion.getTexture().dispose();
 	}

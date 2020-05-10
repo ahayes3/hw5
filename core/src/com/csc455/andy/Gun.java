@@ -7,8 +7,9 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Disposable;
 
-public abstract class Gun {
+public abstract class Gun implements Disposable {
 	public enum Firemode {
 		SINGLE,BURST,AUTO
 	}
@@ -48,7 +49,7 @@ public abstract class Gun {
 			
 		}
 		animationRegions.add(idle);
-		firingAnimation = new Animation<>(.2f/animationRegions.size,animationRegions);
+		firingAnimation = new Animation<>(delay/animationRegions.size,animationRegions);
 		current = idle;
 		
 		size = Utils.gameToBox(new Vector2(idle.getRegionWidth()*scale,idle.getRegionHeight()*scale));
@@ -116,8 +117,6 @@ public abstract class Gun {
 	return new Bullet(position,velocity,damage,owner,dimension,world);
 	}
 	public void draw(SpriteBatch batch) {
-		//Vector2 pos = Coords.boxToGame(body.getPosition());
-		System.out.println(body.getAngle());
 		if((body.getAngle() <= Math.PI/2 && body.getAngle() > -Math.PI/2 ) && current.isFlipY()) {
 			current.flip(false, true);
 			flipped =false;
@@ -130,5 +129,11 @@ public abstract class Gun {
 		Vector2 pos = Utils.boxToGame(body.getWorldPoint(new Vector2(-size.x/2f,-size.y/2f)));
 		batch.draw(current,pos.x,pos.y,0,0,current.getRegionWidth(),current.getRegionHeight(),scale,scale, (float) (body.getAngle() * (180/Math.PI)));
 		bullets.forEach(p -> p.draw(batch));
+	}
+	
+	@Override
+	public void dispose() {
+		atlas.dispose();
+		
 	}
 }

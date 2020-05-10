@@ -11,6 +11,11 @@ public class MyContactListener implements ContactListener {
 		Object dataA = a.getBody().getUserData();
 		Object dataB = b.getBody().getUserData();
 		
+		if(a.isSensor() && dataB instanceof MyMap)
+			a.setUserData(true);
+		else if (dataA instanceof  MyMap && b.isSensor())
+			b.setUserData(true);
+		 
 		if(dataA instanceof Hittable && dataB instanceof Bullet) {
 			Bullet bullet = (Bullet) dataB;
 			Hittable hittable =(Hittable) dataA;

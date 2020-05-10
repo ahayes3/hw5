@@ -15,7 +15,7 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
 
 enum Movement {
-	STANDING, WALKING, SPRINTING;
+	STANDING, WALKING, SPRINTING
 }
 
 public class Player implements Disposable,Hittable {
@@ -31,13 +31,16 @@ public class Player implements Disposable,Hittable {
 	Body body,arm;
 	Array<Gun> inventory;
 	boolean jumped;
+	float jumpDelta;
 	Gun selection;
 	Dimension dimension;
+	Fixture jumpSensor;
+	Boolean canJump;
 	
 	public Player(TextureAtlas atlas, World world) {
-		//todo if in past fixture.filter with past else filter with current
 		inventory = new Array<>();
 		inventory.setSize(5);
+		canJump =false;
 		aim = new Vector2(1, 0);
 		position = new Vector2(8, 20);
 		velocity = Vector2.Zero;
@@ -93,7 +96,19 @@ public class Player implements Disposable,Hittable {
 		arm = world.createBody(bodyDef);
 		arm.setGravityScale(0);
 		arm.createFixture(fixtureDef);
+		
+		//creating sensor on bottom to test if jumping is possible
+		fixtureDef.filter.categoryBits = Utils.PLAYER_BITS;
+		fixtureDef.filter.maskBits = Utils.PRESENT_BITS;
+		shape.setAsBox(((standing.getRegionWidth()-2) / 2f) / Utils.pixelRatio,standing.getRegionHeight()/2f/Utils.pixelRatio/5f,new Vector2(Utils.gameToBox(0,-standing.getRegionHeight()/2f)),0);
+		fixtureDef.shape =shape;
+		fixtureDef.isSensor = true;
+		
+		jumpSensor = body.createFixture(fixtureDef);
+		jumpSensor.setUserData(canJump);
 		shape.dispose();
+		
+		
 	}
 	
 	public boolean pickup(Gun gun) {
@@ -110,25 +125,35 @@ public class Player implements Disposable,Hittable {
 		return true;
 	}
 	
-	public void update(OrthographicCamera camera, boolean present, MyMap map,World world, float delta) {
+	
+	public void setPosition(Vector2 position) {
+		body.setTransform(Utils.gameToBox(position),body.getAngle());
+	}
+	
+	public void update(OrthographicCamera camera, Dimension dimension, MyMap map,World world, float delta) {
+		this.dimension = dimension;
+		position = Utils.boxToGame(body.getPosition().x, body.getPosition().y).sub(0, height);
+		arm.setTransform(body.getPosition(), (float) arm.getAngle());
+		selection.setPosition(body.getPosition().add(aim.nor().scl((armRegion.getRegionWidth())/ Utils.pixelRatio)),arm.getAngle());
+		
 		if (!dead()) {
 			move(camera, world, delta);
 			Filter f = new Filter();
 			
-			if (present && (body.getFixtureList().get(0).getFilterData().maskBits & Utils.PRESENT_BITS) == 0) {
-//				f.categoryBits = Utils.PRESENT_BITS | Utils.PLAYER_BITS;
-//				f.maskBits = Utils.PRESENT_BITS;
+			if (dimension ==Dimension.PRESENT && (body.getFixtureList().get(0).getFilterData().maskBits & Utils.PRESENT_BITS) == 0) {
 				f.categoryBits = Utils.PLAYER_BITS;
 				f.maskBits = Utils.PRESENT_BITS;
-				body.getFixtureList().get(0).setFilterData(f);
+				for(Fixture fixture:body.getFixtureList()) {
+					fixture.setFilterData(f);
+				}
 				map.swapDraw();
 			}
-			else if(!present && (body.getFixtureList().get(0).getFilterData().maskBits & Utils.PAST_BITS) == 0) {
-//				f.categoryBits = MainGame.PAST;
-//				f.maskBits = MainGame.BULLETMASK|MainGame.PAST;
+			else if(dimension == Dimension.PAST && (body.getFixtureList().get(0).getFilterData().maskBits & Utils.PAST_BITS) == 0) {
 				f.categoryBits = Utils.PLAYER_BITS;
 				f.maskBits = Utils.PAST_BITS;
-				body.getFixtureList().get(0).setFilterData(f);
+				for(Fixture fixture:body.getFixtureList()) {
+					fixture.setFilterData(f);
+				}
 				map.swapDraw();
 			}
 			
@@ -147,10 +172,9 @@ public class Player implements Disposable,Hittable {
 		dimension = state.dimension;
 	}
 	public void move(OrthographicCamera camera,World world, float delta) {
-		right.set(1, 0);
-		left.set(-1, 0);
-		up.set(0, 1);
-		down.set(-1, 0);
+		canJump = (Boolean) jumpSensor.getUserData();
+		
+		
 		float velClamp = 12;
 		final float velMod = 30;
 		float sprintMul = 1;
@@ -178,18 +202,25 @@ public class Player implements Disposable,Hittable {
 			movement = Movement.SPRINTING;
 		else if (velocity.x != 0)
 			movement = Movement.WALKING;
-		
-		if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE))
+		jumpDelta += delta;
+		if(jumpDelta < .1f)
+			jumpSensor.setUserData(false);
+		if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE) && jumpDelta> .1f && canJump) {
 			body.setLinearVelocity(body.getLinearVelocity().x, 13);
+			jumpDelta = 0;
+			canJump = false;
+			jumpSensor.setUserData(false);
+		}
+		
 		
 		body.setLinearVelocity(velocity.x, body.getLinearVelocity().y);
 		
 		Vector3 unprojected = camera.unproject(unprojector.set(Gdx.input.getX(), Gdx.input.getY(), 0));
 		aim.set(unprojected.x - (position.x + width / 2f), unprojected.y - (position.y + height / 2f));
 		
-		arm.setTransform(body.getPosition(), (float) (aim.angleRad()));
+		arm.setTransform(body.getPosition(), aim.angleRad());
 		
-		Vector2 hand = arm.getWorldPoint(Utils.gameToBox(new Vector2(armRegion.getRegionWidth(),0)));
+		//Vector2 hand = arm.getWorldPoint(Utils.gameToBox(new Vector2(armRegion.getRegionWidth(),0)));
 		
 		if(selection != null) {
 			selection.setPosition(body.getPosition().add(aim.nor().scl((armRegion.getRegionWidth())/ Utils.pixelRatio)),aim.angleRad());
@@ -199,7 +230,8 @@ public class Player implements Disposable,Hittable {
 		position.sub(standing.getRegionWidth() / 2f, -standing.getRegionWidth());
 		camera.position.set(position.x, position.y, 0);
 		
-		
+		if(body.getPosition().y < -1)
+			health = -1;
 		
 		if (selection.firemode == Gun.Firemode.AUTO && Gdx.input.isTouched())
 			selection.shoot(world,dimension,body);
@@ -247,7 +279,6 @@ public class Player implements Disposable,Hittable {
 	@Override
 	public void dispose() {
 		atlas.dispose();
-		
 	}
 	public Body getBody() {
 		return body;
