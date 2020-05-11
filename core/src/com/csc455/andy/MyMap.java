@@ -10,10 +10,12 @@ import com.badlogic.gdx.maps.tiled.TiledMap;
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer;
 import com.badlogic.gdx.maps.tiled.TmxMapLoader;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.*;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Disposable;
+import org.w3c.dom.css.Rect;
 
 import java.util.Iterator;
 
@@ -26,6 +28,7 @@ public class MyMap implements Disposable {
 	TiledMapTileLayer presentLayer,pastLayer;
 	MapLayer presentObjects,pastObjects;
 	Vector2 spawn;
+	Rectangle end;
 	float tileWidth,tileHeight;
 	MainGame level;
 	public MyMap(String pastPath,String presentPath, OrthographicCamera camera, float scale,World world,boolean startPresent,MainGame level) {
@@ -134,6 +137,24 @@ public class MyMap implements Disposable {
 		else
 			spawn = ((RectangleMapObject)pastObjects.getObjects().get("spawn")).getRectangle().getPosition(new Vector2());
 		spawn.scl(scale);
+		
+		if(presentObjects.getObjects().get("end")!= null) {
+			end = ((RectangleMapObject) presentObjects.getObjects().get("end")).getRectangle();
+			end.x = end.x*scale;
+			end.y = end.y*scale;
+			end.height =end.height*scale;
+			end.width = end.width*scale;
+		}
+		else if(pastObjects.getObjects().get("end")!=null) {
+			end = ((RectangleMapObject) pastObjects.getObjects().get("end")).getRectangle();
+			end.x = end.x*scale;
+			end.y = end.y*scale;
+			end.height =end.height*scale;
+			end.width = end.width*scale;
+		}
+	}
+	public Rectangle getEnd() {
+		return end;
 	}
 	public Vector2 getSpawn() {
 		return spawn;

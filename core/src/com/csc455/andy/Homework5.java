@@ -14,7 +14,7 @@ public class Homework5 extends Game
 	public BitmapFont font;
 	public Array<Screen> screens;
 	public Skin skin;
-	Screen lastScreen;
+	Screen lastScreen,win;
 	public Screen menu;
 	@Override
 	public void create () {
@@ -23,10 +23,9 @@ public class Homework5 extends Game
 		font = new BitmapFont();
 		screens = new Array<>();
 		menu = new MainMenu(this);
+		win = new WinScreen(this);
 		screens.add(menu);
 		screens.add(new DeathScreen(this));
-//		screens.add(new MainGame(this,-1));
-//		screens.add(new MainGame(this,1));
 		
 		this.setScreen(menu);
 	}

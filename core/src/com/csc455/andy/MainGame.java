@@ -4,6 +4,7 @@ package com.csc455.andy;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
@@ -75,6 +76,8 @@ public class MainGame extends Stage implements Screen {
 		
 		//enemies.add(new TrackedRobot(new TextureAtlas("sprites/enemies/trackedRobot/TrackedRobot.atlas"),50,Dimension.PRESENT,new Vector2(64,50),world));
 		player.setPosition(map.getSpawn().cpy());
+		
+		shapeRenderer.setAutoShapeType(true);
 	}
 	@Override
 	public void show() {
@@ -103,6 +106,9 @@ public class MainGame extends Stage implements Screen {
 		guns.forEach(p -> p.update(dt));
 		world.step(dt,6,2);
 		
+		if(map.end.contains(Utils.boxToGame(player.body.getPosition().cpy())))
+			game.setScreen(game.win);
+		
 		draw(delta);
 	}
 	public void draw(float delta) {
@@ -118,9 +124,13 @@ public class MainGame extends Stage implements Screen {
 		player.draw(batch);
 		batch.end();
 		
-		debugRenderer.render(world,camera.combined.scl(8));
+		//debugRenderer.render(world,camera.combined.scl(8));
+		
 		shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 		enemies.forEach(p -> p.drawShapes(shapeRenderer,dimension));
+		shapeRenderer.set(ShapeRenderer.ShapeType.Line);
+		shapeRenderer.setColor(Color.GREEN);
+		shapeRenderer.rect(map.end.x,map.end.y,map.end.width,map.end.height);
 		shapeRenderer.end();
 		
 		camera.update();

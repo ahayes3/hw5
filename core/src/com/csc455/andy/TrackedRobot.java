@@ -12,6 +12,7 @@ import com.badlogic.gdx.utils.Array;
 public class TrackedRobot extends Enemy implements Hittable {
 	float shotDelta;
 	Player player;
+	boolean playerInRange;
 	Laser laser;
 	public TrackedRobot(int health, Dimension dimension, Vector2 position,Player player, World world) {
 		super(new TextureAtlas("sprites/enemies/trackedRobot/TrackedRobot.atlas"), health,dimension);
@@ -41,6 +42,7 @@ public class TrackedRobot extends Enemy implements Hittable {
 		FixtureDef fixtureDef = new FixtureDef();
 		fixtureDef.density = 1;
 		fixtureDef.shape=shape;
+		playerInRange =false;
 		
 		if(dimension ==  Dimension.PAST) {
 			fixtureDef.filter.maskBits = Utils.PAST_BITS | Utils.BULLET_BITS;
@@ -87,7 +89,11 @@ public class TrackedRobot extends Enemy implements Hittable {
 			Box<Boolean> bool = new Box<>();
 			CanSeeFixtureCB cb = new CanSeeFixtureCB(player.body.getFixtureList(),bool);
 			world.rayCast(cb,body.getPosition(),player.body.getPosition());
-			if(body.getPosition().cpy().sub(player.body.getPosition()).len2() < 1000 && laser == null && shotDelta > 2f && bool.value)
+			
+			playerInRange = body.getPosition().cpy().sub(player.body.getPosition()).len2() < 1000;
+			
+			
+			if(playerInRange && laser == null && shotDelta > 2f && bool.value)
 				shoot(Utils.boxToGame(player.body.getPosition().cpy()),player);
 			
 		}
@@ -107,6 +113,12 @@ public class TrackedRobot extends Enemy implements Hittable {
 	@Override
 	void draw(SpriteBatch batch, Dimension dimension) {
 		if(this.dimension == dimension) {
+			float playerAngle = player.body.getPosition().cpy().sub(body.getPosition()).angle();
+			if(playerInRange && (playerAngle <= 90 || playerAngle > 270) && current.isFlipX())
+				current.flip(true,false);
+			else if(playerInRange && (playerAngle > 90 && playerAngle <= 270) && !current.isFlipX())
+				current.flip(true,false);
+			
 			Vector2 pos = position.cpy().sub(current.getRegionWidth()/2f,current.getRegionHeight()/2f);
 			batch.draw(current,pos.x,pos.y,current.getRegionWidth()/2f,current.getRegionHeight()/2f,current.getRegionWidth(),current.getRegionHeight(),1,1, (float) (body.getAngle() * (180/Math.PI)));
 		}
